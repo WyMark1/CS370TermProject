@@ -15,7 +15,7 @@ bool testServer() {
     cout << "Testing Server... \n";
 
     if (placeHolderServer() != 0) { // Place holder
-        cerr << "Place holder server test failed";
+        cerr << "Place holder server test failed\n";
         return false;
     }
 
@@ -26,7 +26,7 @@ bool testPI() {
     cout << "Testing Rasberry PI... \n";
 
     if (placeHolderPI() != 0) { // Place holder
-        cerr << "Place holder Rasberry PI test failed";
+        cerr << "Place holder Rasberry PI test failed\n";
         return false;
     }
 
@@ -37,7 +37,7 @@ bool testClient() {
     cout << "Testing Client... \n";
 
     if (placeHolderClient() != 0) { // Place holder
-        cerr << "Place holder client test failed";
+        cerr << "Place holder client test failed\n";
         return false;
     }
 
@@ -48,7 +48,7 @@ int main() {
     cout << "Tester started\n";
 
     if (!testClient() || !testServer() || !testPI()) {
-        cerr << "Failures occured";
+        cerr << "Failures occured\n";
         return 1;
     }
 
