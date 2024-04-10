@@ -5,10 +5,11 @@
 #include <string>
 #include <algorithm>
 #include <iomanip>
+#include "RasberryPI.h"
 
 using namespace std;
 
 int placeHolderPI() {
-    cout << "Rasberry Pi\n";
+    cout << "Rasberry PI\n";
     return 0;
 }

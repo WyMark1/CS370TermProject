@@ -5,10 +5,11 @@
 #include <string>
 #include <algorithm>
 #include <iomanip>
+#include "Server.h"
 
 using namespace std;
 
-int placeHolderClient() {
-    cout << "Client\n";
+int placeHolderServer() {
+    cout << "Server\n";
     return 0;
 }

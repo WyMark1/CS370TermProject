@@ -8,7 +8,6 @@
 
 using namespace std;
 
-int placeHolderServer() {
-    cout << "Server\n";
+int main() {
     return 0;
 }
