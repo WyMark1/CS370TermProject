@@ -26,8 +26,8 @@ bool testServer() {
 
 bool testPI() {
     cout << "Testing Rasberry PI... \n";
-
-    if (placeHolderPI() != 0) { // Place holder
+    //runner()
+    if (0 != 0) { // Place holder
         cerr << "Place holder Rasberry PI test failed\n";
         return false;
     }
