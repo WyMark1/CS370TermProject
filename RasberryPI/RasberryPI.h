@@ -1,6 +1,13 @@
-#ifndef RASBERRYPI_H_INCLUDED
-#define RASBERRYPI_H_INCLUDED
+#ifndef RASPBERRYPI_H
+#define RASPBERRYPI_H
 
-int runner();
+// Include necessary system headers for sockets and network communication
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <unistd.h>
 
-#endif /* RASBERRYPI_H_INCLUDED */
+// Forward declarations for functions defined in raspberrypi.cc
+int route(char dest);  // Function to route data based on destination (server or client)
+
+#endif /* RASPBERRYPI_H */
