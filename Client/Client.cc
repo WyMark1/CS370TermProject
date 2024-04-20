@@ -8,8 +8,8 @@
 #include <fstream>
 #include <arpa/inet.h>
 
-#define SERVER_IP_ADDRESS "192.168.1.Y" // Replace Y with the actual IP address of your server or Raspberry Pi (if acting as server)
-#define SERVER_PORT 8081
+#define SERVER_IP_ADDRESS "127.0.0.1" // loopback address
+#define SERVER_PORT 8080
 
 int Client::send_data(const char* filename) {
   // Open the file
