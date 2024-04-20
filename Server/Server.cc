@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <fstream>
 
 #define SERVER_PORT 8080
 
@@ -29,24 +30,44 @@ int send_data(int sockfd, const char* data, int data_length) {
 
 // Function to handle client connection (replace with processing logic)
 int handle_client(int client_sock) {
-  char buffer[1024];
-  int received_bytes;
+  int file_size;
 
-  // Receive data from client
-  received_bytes = receive_data(client_sock, buffer, sizeof(buffer));
-  if (received_bytes <= 0) {
-    return -1; // Error or client disconnected
+  // Receive the file size from the client
+  if (receive_data(client_sock, (char*)&file_size, sizeof(file_size)) <= 0) {
+    return -1; // Error receiving file size
   }
 
-  // Process the received data (replace with your logic)
-  printf("Received data from client: %s\n", buffer);
+  // Allocate buffer to hold the file content
+  char* buffer = new char[file_size];
+
+  // Receive the file content from the client
+  int received_bytes = receive_data(client_sock, buffer, file_size);
+  if (received_bytes <= 0) {
+    delete[] buffer;
+    return -1; // Error receiving file content
+  }
+
+  // Write the received data to a file
+  std::ofstream output_file("received_file.txt", std::ios::binary);
+  if (!output_file.is_open()) {
+    perror("Failed to create output file");
+    delete[] buffer;
+    return -1;
+  }
+
+  output_file.write(buffer, file_size);
+  output_file.close();
+
+  delete[] buffer;
+
+  printf("Received file successfully (size: %d bytes)\n", file_size);
 
   // Simulate processing (can remove this later)
   sleep(2); // Simulate processing time
 
-  // Send processed data back to client (replace with actual processed data)
-  const char* processed_data = "Data processed by server!";
-  send_data(client_sock, processed_data, strlen(processed_data));
+  // Send a response message back to the client
+  const char* response_message = "File received and processed by the server!";
+  send_data(client_sock, response_message, strlen(response_message));
 
   return 0;
 }
