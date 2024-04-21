@@ -7,7 +7,7 @@
 #include <arpa/inet.h>
 #include "Server.h"
 
-#define SERVER_PORT 8081 // Updated to match Raspberry Pi client port
+#define SERVER_PORT 8080 // Updated to match Raspberry Pi client port
 #define RPI_IP_ADDRESS "127.0.0.1" // Replace with the actual IP address of your Raspberry Pi
 
 // Function to receive data from a socket
@@ -49,9 +49,8 @@ int handle_raspberry_pi(int sockfd) {
     return -1; // Error receiving file content
   }
 
-  // Process the received data (replace with your logic)
-  // You can perform data manipulation (hex conversion, string manipulation)
-  // based on your project requirements here.
+  // Process the received data
+
 
   // Simulate processing (can remove this later)
   sleep(2); // Simulate processing time
