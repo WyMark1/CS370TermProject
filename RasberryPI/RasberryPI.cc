@@ -10,8 +10,8 @@
 #include <unistd.h>
 #include "RasberryPI.h"
 
-#define SERVER_IP_ADDRESS "192.168.1.Y" // Replace Y with the actual IP addess of the server
-#define CLIENT_IP_ADDRESS "192.168.1.Y" // Replace Y with the actual IP addess of the client
+#define SERVER_IP_ADDRESS "127.0.0.1" // Replace Y with the actual IP addess of the server
+#define CLIENT_IP_ADDRESS "127.0.0.1" // Replace Y with the actual IP addess of the client
 #define CLIENT_PORT 8081
 #define SERVER_PORT 8080
 
