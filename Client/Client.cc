@@ -1,49 +1,54 @@
-#include "Client.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <algorithm>
+#include <iomanip>
+#include <cstring> 
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <unistd.h>
 
 #define CLIENT_PORT 8081 // Updated to match Raspberry Pi port
+#define RPI_IP_ADDRESS "127.0.0.1" // Replace with Raspberry Pi's IP
 
-// Replace with the actual IP address of your Raspberry Pi
-#define RPI_IP_ADDRESS "127.0.0.1"
+int main() {
+  std::string filename;
 
-int Client::send_data(const char* filename) {
+  // Prompt user to enter filename
+  std::cout << "Enter the name of the text file to send: ";
+  std::getline(std::cin, filename);
+
   // Open the file
   std::ifstream file(filename, std::ios::binary);
   if (!file.is_open()) {
     perror("Failed to open file");
-    return -1;
+    return EXIT_FAILURE;
   }
 
-  // Get file size
-  file.seekg(0, std::ios::end);
-  int file_size = file.tellg();
-  file.seekg(0, std::ios::beg);
+  // Get file size (optional, not used for dynamic buffer)
+  // file.seekg(0, std::ios::end);
+  // int file_size = file.tellg();
+  // file.seekg(0, std::ios::beg);
 
-  // Allocate buffer for file contents
-  char* buffer = new char[file_size];
+  // Determine a dynamic buffer size based on system capabilities (optional)
+  int buffer_size = 4096; // Start with a reasonable default
 
-  // Read file contents into buffer
-  if (!file.read(buffer, file_size)) {
-    perror("Failed to read file");
-    delete[] buffer;
-    return -1;
+  #ifdef _SC_PAGESIZE
+  int page_size = sysconf(_SC_PAGESIZE);
+  if (page_size > 0) {
+    buffer_size = page_size; // Use system page size for efficiency
   }
+  #endif
 
-  // Close the file
-  file.close();
+  char* buffer = new char[buffer_size];
 
-  // Connect to Raspberry Pi
+  // Connect to Raspberry Pi (server)
   int sockfd = socket(AF_INET, SOCK_STREAM, 0);
   if (sockfd < 0) {
     perror("socket creation failed");
     delete[] buffer;
-    return -1;
+    return EXIT_FAILURE;
   }
 
   struct sockaddr_in server_addr;
@@ -54,61 +59,48 @@ int Client::send_data(const char* filename) {
   if (connect(sockfd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
     perror("connection failed");
     delete[] buffer;
-    return -1;
+    return EXIT_FAILURE;
   }
 
-  // Send file size first
-  int sent_bytes = send(sockfd, &file_size, sizeof(file_size), 0);
-  if (sent_bytes < 0) {
-    perror("Error sending file size");
-    delete[] buffer;
-    return -1;
+  // Set timeout for receiving response from Raspberry Pi
+  int timeout = 20; // Set a timeout in seconds (adjust as needed)
+  setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
+
+  // Send data to Raspberry Pi (server)
+  while (!file.eof()) {
+    int bytes_read = file.read(buffer, buffer_size).gcount();
+    if (bytes_read < 0) {
+      perror("Error reading file");
+      delete[] buffer;
+      close(sockfd);
+      return EXIT_FAILURE;
+    }
+
+    int sent_bytes = send(sockfd, buffer, bytes_read, 0);
+    if (sent_bytes < 0) {
+      perror("send failed");
+      delete[] buffer;
+      close(sockfd);
+      return EXIT_FAILURE;
+    }
   }
 
-  // Send the file contents
-  sent_bytes = send(sockfd, buffer, file_size, 0);
-  if (sent_bytes < 0) {
-    perror("send failed");
-    delete[] buffer;
-    return -1;
-  }
+  // Receive response from Raspberry Pi (containing processed data from server)
+  char response_buffer[1024];
+  int received_bytes = recv(sockfd, response_buffer, sizeof(response_buffer), 0);
 
-  // Receive response from Raspberry Pi (optional)
-  int received_bytes = recv(sockfd, buffer, sizeof(buffer), 0);
   if (received_bytes > 0) {
-    buffer[received_bytes] = '\0'; // Ensure null termination
-    printf("Raspberry Pi response: %s\n", buffer);
+    response_buffer[received_bytes] = '\0'; // Ensure null termination
+    printf("Processed data from server: %s\n", response_buffer);
   } else if (received_bytes == 0) {
-    printf("Raspberry Pi disconnected\n");
+    printf("Raspberry Pi disconnected before sending response\n");
   } else {
     perror("Error receiving response");
   }
 
+  // Close connection
   close(sockfd);
   delete[] buffer;
 
-  return 0;
-}
-
-int main() {
-  std::string filename;
-
-  // Prompt user to enter filename
-  std::cout << "Enter the name of the text file to send: ";
-  std::getline(std::cin, filename);
-
-  // Create a Client object
-  Client client;
-
-  // Send the file contents to the server
-  if (client.send_data(filename.c_str()) < 0) {
-    std::cerr << "Error sending file to server" << std::endl;
-    return EXIT_FAILURE;
-  }
-
-  std::cout << "File sent successfully!" << std::endl;
-
   return EXIT_SUCCESS;
 }
-
-

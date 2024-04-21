@@ -1,13 +1,15 @@
 #ifndef RASPBERRYPI_H
 #define RASPBERRYPI_H
 
-// Include necessary system headers for sockets and network communication
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <unistd.h>
+#define BUFFER_SIZE 1024
 
-// Forward declarations for functions defined in raspberrypi.cc
-int route(char dest);  // Function to route data based on destination (server or client)
+// Function prototypes for clarity (assuming they're defined elsewhere)
+int receive_data(int sockfd, char* buffer, int buffer_size);
+int send_data(int sockfd, const char* data, int data_length);
 
-#endif /* RASPBERRYPI_H */
+int handle_client(int client_sock);
+int handle_server(const char* server_ip, int server_port);
+
+int route(char dest);
+
+#endif
