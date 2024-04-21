@@ -5,11 +5,12 @@
 #include <unistd.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <fstream>
 #include <arpa/inet.h>
 
-#define SERVER_IP_ADDRESS "127.0.0.1" // loopback address
-#define SERVER_PORT 8080
+#define CLIENT_PORT 8081 // Updated to match Raspberry Pi port
+
+// Replace with the actual IP address of your Raspberry Pi
+#define RPI_IP_ADDRESS "127.0.0.1"
 
 int Client::send_data(const char* filename) {
   // Open the file
@@ -37,6 +38,7 @@ int Client::send_data(const char* filename) {
   // Close the file
   file.close();
 
+  // Connect to Raspberry Pi
   int sockfd = socket(AF_INET, SOCK_STREAM, 0);
   if (sockfd < 0) {
     perror("socket creation failed");
@@ -46,8 +48,8 @@ int Client::send_data(const char* filename) {
 
   struct sockaddr_in server_addr;
   server_addr.sin_family = AF_INET;
-  server_addr.sin_port = htons(SERVER_PORT);
-  server_addr.sin_addr.s_addr = inet_addr(SERVER_IP_ADDRESS);
+  server_addr.sin_port = htons(CLIENT_PORT);
+  server_addr.sin_addr.s_addr = inet_addr(RPI_IP_ADDRESS);
 
   if (connect(sockfd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
     perror("connection failed");
@@ -71,13 +73,13 @@ int Client::send_data(const char* filename) {
     return -1;
   }
 
-  // Receive response from server (optional)
+  // Receive response from Raspberry Pi (optional)
   int received_bytes = recv(sockfd, buffer, sizeof(buffer), 0);
   if (received_bytes > 0) {
     buffer[received_bytes] = '\0'; // Ensure null termination
-    printf("Server response: %s\n", buffer);
+    printf("Raspberry Pi response: %s\n", buffer);
   } else if (received_bytes == 0) {
-    printf("Server disconnected\n");
+    printf("Raspberry Pi disconnected\n");
   } else {
     perror("Error receiving response");
   }
@@ -87,3 +89,26 @@ int Client::send_data(const char* filename) {
 
   return 0;
 }
+
+int main() {
+  std::string filename;
+
+  // Prompt user to enter filename
+  std::cout << "Enter the name of the text file to send: ";
+  std::getline(std::cin, filename);
+
+  // Create a Client object
+  Client client;
+
+  // Send the file contents to the server
+  if (client.send_data(filename.c_str()) < 0) {
+    std::cerr << "Error sending file to server" << std::endl;
+    return EXIT_FAILURE;
+  }
+
+  std::cout << "File sent successfully!" << std::endl;
+
+  return EXIT_SUCCESS;
+}
+
+
