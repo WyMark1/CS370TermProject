@@ -10,7 +10,7 @@
 #include <unistd.h>
 
 #define CLIENT_PORT 8081 // Updated to match Raspberry Pi port
-#define RPI_IP_ADDRESS "127.0.0.1" // Replace with Raspberry Pi's IP
+#define RPI_IP_ADDRESS "129.82.45.123" // Replace with Raspberry Pi's IP
 
 int main() {
   std::string filename;
@@ -56,7 +56,7 @@ int main() {
   server_addr.sin_port = htons(CLIENT_PORT);
   server_addr.sin_addr.s_addr = inet_addr(RPI_IP_ADDRESS);
 
-  if (connect(sockfd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
+  if (connect(sockfd, reinterpret_cast<sockaddr*> (&server_addr), sizeof(server_addr)) < 0) {
     perror("connection failed");
     delete[] buffer;
     return EXIT_FAILURE;
