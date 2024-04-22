@@ -1,15 +1,15 @@
-#include "RasberryPI.h"
+#include "Client.h"
 #include <iostream>
-#include <unistd.h>  
+#include <unistd.h>
 using namespace std;
 
 int main() {
 
   while (true) {
     if (run() == -1) {
-      cout << "Routing failed\n";  
+      cout << "Client send failed\n";  
     } else {
-      cout << "Routing succeded\n";
+      cout << "Client send succeded\n";
     } 
     sleep(5);
   }
