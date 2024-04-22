@@ -1,14 +1,18 @@
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <algorithm>
-#include <iomanip>
-#include <cstring> 
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <unistd.h>
 #include "Server.h"
+#include <iostream>
+#include <unistd.h>
+using namespace std;
 
 int main() {
+
+  while (true) {
+    if (run() == -1) {
+      cout << "Server send failed\n";  
+    } else {
+      cout << "Server send succeded\n";
+    } 
+    sleep(5);
+  }
+  return 0;
 }
+
