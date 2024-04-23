@@ -11,9 +11,12 @@ using namespace std;
 
 int main() {
     string key = "ABCDEFGHIJKLMNOP";
-    string in = "./Encryption/TestIn.txt";
-    string out = "./Encryption/TestOut.txt";
-    string finOut = "./Encryption/TestFinal.txt";
+    string in = "This is a test file to be encrypted ./,123455678910!@#$%^&*(()_+\n\n\n)\n;'";
+    string out;
+    string finOut;
     Encrypt(in, out, key);
+    cout << "Encrypted: \n" << out << "\n";
+
     Decrypt(out, finOut, key);
+    cout << "Decrypted: " << finOut << "\n";
 }

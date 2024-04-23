@@ -11,7 +11,6 @@ int main() {
     } else {
       cout << "Server send succeded\n";
     } 
-    sleep(5);
   }
   return 0;
 }

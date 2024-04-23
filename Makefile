@@ -4,13 +4,13 @@ CXXFLAGS=-Wall -Wextra -Wpedantic -Werror -Wfatal-errors -Winit-self -Wshadow -W
 all: clean server client PI
 		
 server:
-	$(CXX) $(CXXFLAGS) -o ./Server/Server.o ./Server/*.cc ./Networking/*.cc
+	$(CXX) $(CXXFLAGS) -o ./Server/Server.o ./Server/*.cc ./Networking/*.cc ./Encryption/[!main]*.cc
 
 client:
-	$(CXX) $(CXXFLAGS) -o ./Client/Client.o ./Client/*.cc ./Networking/*.cc
+	$(CXX) $(CXXFLAGS) -o ./Client/Client.o ./Client/*.cc ./Networking/*.cc ./Encryption/[!main]*.cc
 
 PI: 
-	$(CXX) $(CXXFLAGS) -o ./RasberryPI/PI.o ./RasberryPI/*.cc ./Networking/*.cc
+	$(CXX) $(CXXFLAGS) -o ./RasberryPI/PI.o ./RasberryPI/*.cc ./Networking/*.cc ./Encryption/[!main]*.cc
 
 encrypt: 
 	$(CXX) $(CXXFLAGS) -o Encrypt.o ./Encryption/*.cc
