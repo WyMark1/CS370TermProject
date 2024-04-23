@@ -10,7 +10,7 @@
 
 using namespace std;
 
-void blockEncrypt(ifstream &in, ofstream &out, string &key) {
+void blockEncrypt(istream &in, ostream &out, string &key) {
     int blockSize = 16;
     char block[16];
     char moddedKey[16];
@@ -50,7 +50,7 @@ void blockEncrypt(ifstream &in, ofstream &out, string &key) {
     if (!empty) out << swapped;
 }
 
-void blockDecrypt(ifstream &in, ofstream &out, string &key) {
+void blockDecrypt(istream &in, ostream &out, string &key) {
     int blockSize = 16;
     char moddedKey[16];
     string unswapped;
@@ -92,24 +92,18 @@ void blockDecrypt(ifstream &in, ofstream &out, string &key) {
 }
 
 void Encrypt(string &in, string &out, string &key) {
-    ofstream file_out;
-    ifstream file_in(in);
-    if (!file_in) throw runtime_error("Input File Does Not Exist\n");
-    file_out.open(out);
-    if (!file_out) throw runtime_error("Output File Not Found\n");
+    ostringstream string_out;
+    istringstream string_in(in);
     if (key.length() != 16) throw runtime_error("Key needs to be length 16\n");
-    blockEncrypt(file_in, file_out, key);
-    file_out.close();
+    blockEncrypt(string_in, string_out, key);
+    out = string_out.str();
 }
 
 void Decrypt(string &in, string &out, string &key) {
-    ofstream file_out;
-    ifstream file_in(in);
-    if (!file_in) throw runtime_error("Input File Does Not Exist\n");
-    file_out.open(out);
-    if (!file_out) throw runtime_error("Output File Not Found\n");
+    ostringstream string_out;
+    istringstream string_in(in);
     if (key.length() != 16) throw runtime_error("Key needs to be length 16\n");
-    blockDecrypt(file_in, file_out, key);
-    file_out.close();
+    blockDecrypt(string_in, string_out, key);
+    out = string_out.str();
 }
 

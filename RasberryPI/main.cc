@@ -11,7 +11,6 @@ int main() {
     } else {
       cout << "Routing succeded\n";
     } 
-    sleep(5);
   }
   return 0;
 }

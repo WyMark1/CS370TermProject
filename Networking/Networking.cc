@@ -20,11 +20,16 @@ int Networking::send(int port, string send_ip, string data) {
     addr.sin_port = htons(port);
 
     int sock = socket(AF_INET, SOCK_STREAM, 0);
+    
     if (sock < 0) {
         perror("socket creation failed");
         close(sock);
         return -1;
     }
+
+    int opt = 1;
+    setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+    setsockopt(sock, SOL_SOCKET, SO_REUSEPORT, &opt, sizeof(opt));
 
     if (connect(sock, reinterpret_cast<struct sockaddr *>(&addr), sizeof(addr)) < 0) {
         perror("connection failed");
@@ -58,6 +63,7 @@ string Networking::receive (int port) {
 
     int opt = 1;
     setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+    setsockopt(sock, SOL_SOCKET, SO_REUSEPORT, &opt, sizeof(opt));
 
     if (bind(sock, reinterpret_cast<struct sockaddr *>(&addr), sizeof(addr)) < 0) {
       perror("Bind failed");
@@ -74,10 +80,11 @@ string Networking::receive (int port) {
     printf("Listening connections on port %d...\n", port);
 
     int len = sizeof(addr);
-    sock = accept(sock, reinterpret_cast<struct sockaddr *>(&addr), reinterpret_cast<socklen_t *>(&len));
-    if (sock < 0) {
+    int sock_data = accept(sock, reinterpret_cast<struct sockaddr *>(&addr), reinterpret_cast<socklen_t *>(&len));
+    close(sock);
+    if (sock_data < 0) {
       perror("Accept failed");
-      close(sock);
+      close(sock_data);
       exit(EXIT_FAILURE);
     }
 
@@ -87,15 +94,15 @@ string Networking::receive (int port) {
     printf("Connection from %s\n", ip);
 
     char buffer[BUFFER_SIZE];
-    int received_bytes = recv(sock, buffer, BUFFER_SIZE, 0);
+    int received_bytes = recv(sock_data, buffer, BUFFER_SIZE, 0);
     if (received_bytes < 0) {
         perror("Receive Failed");
-        close(sock);
+        close(sock_data);
         exit(EXIT_FAILURE);
     }
 
     printf("Received : %d bytes of data\n", received_bytes);
 
-    close(sock);
+    close(sock_data);
     return string(buffer, received_bytes);
 }

@@ -7,9 +7,11 @@
 #include <unistd.h>
 #include "Client.h"
 #include "../Networking/Networking.h"
+#include "../Encryption/Encryption.h"
 
 #define CLIENT_PORT 8081 // Client port
-#define RPI_IP_ADDRESS "129.82.44.80" // Replace with Raspberry Pi's IP
+#define CLIENT_SEND_PORT 8089
+#define RPI_IP_ADDRESS "127.0.0.0" // Replace with Raspberry Pi's IP
 #define BUFFER_SIZE 1024
 using namespace std;
 
@@ -26,27 +28,31 @@ int run() {
   }
 
   char* buffer = new char[BUFFER_SIZE];
+  string key = "SUPER secret key";
   string output;
   Networking net;
   while (!file.eof()) {
+    memset(buffer, 0, BUFFER_SIZE); //Delete what is in the buffer
     int bytes_read = file.read(buffer, BUFFER_SIZE).gcount();
     if (bytes_read < 0) {
       perror("Error reading file");
       delete[] buffer;
       return -1;
     }
-    //Encrypt data
-    if (net.send(CLIENT_PORT,RPI_IP_ADDRESS,string(buffer, BUFFER_SIZE)) == -1) {
+    string data = string(buffer, BUFFER_SIZE);
+    string send;
+    Encrypt(data,send,key);
+    if (net.send(CLIENT_PORT,RPI_IP_ADDRESS, send) == -1) {
       delete[] buffer;
       return -1;
+    } else {
+      data = net.receive(CLIENT_SEND_PORT);
+      Decrypt(data,send,key);
+      output += send;
     }
-
-    output += net.receive(CLIENT_PORT);
   }
-
-  cout << "Data: \n" << output << '\n';
-
   delete[] buffer;
+  cout << "Data: \n" << output << '\n';
 
   return 0;
 }
