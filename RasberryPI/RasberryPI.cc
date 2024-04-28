@@ -11,7 +11,7 @@
 #define SERVER_PORT 8080  // Port for Server
 #define CLIENT_SEND_PORT 8089
 #define SERVER_SEND_PORT 8083
-#define SERVER_IP "127.0.0.0" //IP of server
+#define SERVER_IP "10.0.0.176" //IP of server
 
 using namespace std;
 
