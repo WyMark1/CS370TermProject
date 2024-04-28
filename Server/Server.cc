@@ -32,17 +32,17 @@ int run() {
 
     while (true) { 
         string data = net.receive(SERVER_PORT);
-        string decrypt;
-        Decrypt(data, decrypt, key);
-
+        cout << "Received: " << data << endl;
         // Extract burst time (assuming space-delimited format)
         size_t pos = decrypt.find(' ');
         string burstTimeStr = decrypt.substr(0, pos);
         string taskData = decrypt.substr(pos + 1);
+        string decrypt;
+        Decrypt(data, decrypt, key);
 
-        // Calculate arrival time and burst duration (you may need to refine this)
+        // Calculate arrival time and burst duration
         int arrival_time = time(nullptr); 
-        int burst_duration = stoi(burstTimeStr); // Example if burst time is an integer
+        int burst_duration = stoi(burstTimeStr);
 
         // Add new task to queue
         taskQueue.push(Task{burstTimeStr, arrival_time, burst_duration, taskData, 0});
