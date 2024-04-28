@@ -11,7 +11,7 @@
 
 #define CLIENT_PORT 8081 // Client port
 #define CLIENT_SEND_PORT 8089
-#define RPI_IP_ADDRESS "127.0.0.0" // Replace with Raspberry Pi's IP
+#define RPI_IP_ADDRESS "127.0.1.1" // Replace with Raspberry Pi's IP
 #define BUFFER_SIZE 1024
 using namespace std;
 
