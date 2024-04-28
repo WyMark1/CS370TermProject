@@ -33,10 +33,9 @@ int run() {
     while (true) { 
         string data = net.receive(SERVER_PORT);
         cout << "Received: " << data << endl;
-        // Extract burst time (assuming space-delimited format)
-        size_t pos = decrypt.find(' ');
-        string burstTimeStr = decrypt.substr(0, pos);
-        string taskData = decrypt.substr(pos + 1);
+        size_t pos = data.find(' ');
+        string burstTimeStr = data.substr(0, pos);
+        string taskData = data.substr(pos + 1);
         string decrypt;
         Decrypt(data, decrypt, key);
 
