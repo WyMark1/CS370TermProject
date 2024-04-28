@@ -19,13 +19,29 @@ using namespace std;
 
 
 int run() {
-   string data;
-   Networking net;
-   data = net.receive(CLIENT_PORT);
-   string client_ip = net.receive_ip;
-   //Edit data
-   if(net.send(SERVER_PORT,SERVER_IP, data) == -1) return -1;
-   data = net.receive(SERVER_SEND_PORT);
-   if(net.send(CLIENT_SEND_PORT, client_ip, data) == -1) return -1;
-   return 0;
-}
+    string data;
+    Networking net;
+
+    data = net.receive(CLIENT_PORT);
+    string client_ip = net.receive_ip;
+
+    // Calculate burst time as timestamp string
+    time_t burstTimeRaw = time(nullptr);
+    struct tm* burstTimeInfo = localtime(&burstTimeRaw);
+    char timestampStr[80];
+    strftime(timestampStr, 80, "%Y-%m-%d %H:%M:%S", burstTimeInfo);
+
+    // Prepend the burst time to the data
+    data = string(timestampStr) + " " + data;
+
+    // Forward to server
+    if(net.send(SERVER_PORT,SERVER_IP, data) == -1) return -1;
+
+    // Receive from server 
+    data = net.receive(SERVER_SEND_PORT);
+
+    // Send to client
+    if(net.send(CLIENT_SEND_PORT, client_ip, data) == -1) return -1;
+    
+    return 0; 
+} 
