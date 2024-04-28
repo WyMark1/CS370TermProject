@@ -42,6 +42,5 @@ int run() {
 
     // Send to client
     if(net.send(CLIENT_SEND_PORT, client_ip, data) == -1) return -1;
-    
     return 0; 
 } 
