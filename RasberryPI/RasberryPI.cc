@@ -25,14 +25,11 @@ int run() {
     data = net.receive(CLIENT_PORT);
     string client_ip = net.receive_ip;
 
-    // Calculate burst time as timestamp string
-    time_t burstTimeRaw = time(nullptr);
-    struct tm* burstTimeInfo = localtime(&burstTimeRaw);
-    char timestampStr[80];
-    strftime(timestampStr, 80, "%Y-%m-%d %H:%M:%S", burstTimeInfo);
+    // Calculate burst time (can change)
+    int burstTime = data.size() * 0.1;
 
     // Prepend the burst time to the data
-    data = string(timestampStr) + " " + data;
+    data = std::to_string(burstTime) + " " + data;
 
     // Forward to server
     if(net.send(SERVER_PORT,SERVER_IP, data) == -1) return -1;
