@@ -89,6 +89,12 @@ int run() {
     // Prepend the burst time to the data
     data = string(timestampStr) + " " + data;
     */ //add this to the new while loop
+    // Calculate burst time (can change)
+    //int burstTime = data.size() * 0.1;
+
+    // Prepend the burst time to the data
+    //data = std::to_string(burstTime) + " " + data;
+
 
     return 0; 
 } 
