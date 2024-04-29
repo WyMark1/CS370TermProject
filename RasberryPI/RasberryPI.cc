@@ -35,7 +35,6 @@ int run() {
     thread receiveServer(receiver, ref(receiveServerQueue), ref(doneSending), ref(SERVER_SEND_PORT), ref(net2));
 
     //bool hasSent = false;
-
     while (true) {
 
         if (receiveServerQueue.size() > 0 ) {
@@ -77,6 +76,11 @@ int run() {
     // Prepend the burst time to the data
     data = string(timestampStr) + " " + data;
     */ //add this to the new while loop
+    // Calculate burst time (can change)
+    //int burstTime = data.size() * 0.1;
+
+    // Prepend the burst time to the data
+    //data = std::to_string(burstTime) + " " + data;
 
     return 0; 
 } 
