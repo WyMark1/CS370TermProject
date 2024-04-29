@@ -25,7 +25,7 @@ int run() {
     thread receiveThread(receiver, ref(receiveQueue), ref(doneSending), ref(SERVER_PORT), ref(net));
     string current;
     stack<string> working;
-    bool sent = false;
+    //bool sent = false;
     while (true) {
         sleep(1);
         int size = receiveQueue.size();
@@ -34,6 +34,7 @@ int run() {
             string encrypted = receiveQueue.pop();
             Decrypt(encrypted, decrypt, key);
             current = decrypt;
+            cout << "Current: "<< current << "\n";
             //do work on current
         /*} else if (size > 0 && !current.empty()) {
             //check if the burst duration is less on the next item in the queue
@@ -45,8 +46,8 @@ int run() {
             Encrypt(current, send, key);
             if(net.send(SERVER_SEND_PORT, net.receive_ip, send) == -1) return -1;
             current = "";
-            sent = true;
-        } else if (current.empty() && size == 0 && sent) break;
+            //sent = true;
+        }
     }
     doneSending = true;
     cout << "finished";

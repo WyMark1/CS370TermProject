@@ -21,7 +21,7 @@ int run() {
     int SERVER_PORT = 8080;  
     int CLIENT_SEND_PORT = 8089;
     int SERVER_SEND_PORT = 8083;
-    string SERVER_IP = "127.0.0.0";
+    string SERVER_IP = "129.82.44.248";
 
     string data;
     Networking net;
@@ -34,30 +34,21 @@ int run() {
     thread sendThread(sender, ref(sendQueue), ref(doneSending), ref(SERVER_PORT), ref(SERVER_IP));
     thread receiveServer(receiver, ref(receiveServerQueue), ref(doneSending), ref(SERVER_SEND_PORT), ref(net2));
 
-    bool hasSent = false;
+    //bool hasSent = false;
 
     while (true) {
 
         if (receiveServerQueue.size() > 0 ) {
             string sent = receiveServerQueue.pop();
             cout << "Sending to client "<< sent << "\n";
-            if (net.send(CLIENT_SEND_PORT, net.receive_ip, receiveServerQueue.pop()) == -1) return -1;
-            hasSent = true;
+            if (net.send(CLIENT_SEND_PORT, net.receive_ip, sent) == -1) return -1;
+            //hasSent = true;
         }
         sleep(1); // Wait for some things to come in
         int size = receiveQueue.size();
-        if (size == 0 && hasSent) break;
-        else if (size > 5) {
-            string unsorted[5];
-            for (int i = 0; i < 5; i++) {
-                unsorted[i] = receiveQueue.pop();
-            }
-            //sort
-            string sorted[5];
-            for (int i = 0; i < 5; i++) {
-                sendQueue.push(sorted[i]);
-            }
-        } else if (size > 0) {
+        //if (size == 0 && hasSent) break;
+        if (size > 0) {
+            cout << "Size: " << size << "\n";
             vector<string> unsorted;
             for (int i = 0; i < size; i++) {
                 unsorted.push_back(receiveQueue.pop());
@@ -71,9 +62,6 @@ int run() {
         
     } 
 
-    while (receiveServerQueue.size() != 0){
-        if (net.send(CLIENT_SEND_PORT, net.receive_ip, receiveServerQueue.pop()) == -1) return -1;
-    }
     cout << "finished";
     doneSending = true;
     sendThread.join();

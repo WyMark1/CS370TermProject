@@ -19,7 +19,7 @@ using namespace std;
 int run() {
   int client_send_port = 8081;
   int client_receive_port = 8089;
-  string RPI_ip_addr = "127.0.0.0"; //Replace with Raspberry Pi's IP
+  string RPI_ip_addr = "129.82.44.106"; //Replace with Raspberry Pi's IP
   string filename;
 
   cout << "Enter the name of the text file to send: ";
@@ -41,6 +41,7 @@ int run() {
   string data;
   string key = "SUPER secret key";
   string output;
+  int expected = 0;
   while (!file.eof()) {
     getline(file, data);
     if (!file) {
@@ -52,17 +53,24 @@ int run() {
     cout << "sent " << data << "\n";
     Encrypt(data,send,key);
     sendQueue.push(send);
+    expected++;
   }
+  cout << expected << "\n";
   sleep(3);
   cout << "End of loop\n";
-  while (!receiveQueue.empty()) {
-    string receivedData = receiveQueue.pop();
-    string decryptedData;
-    Decrypt(receivedData, decryptedData, key);
-    output += decryptedData;
-    cout << receiveQueue.size();
+  int i=0;
+  while (i != expected) {
+    if (!receiveQueue.empty()) {
+      string receivedData = receiveQueue.pop();
+      string decryptedData;
+      Decrypt(receivedData, decryptedData, key);
+      output += "\n" + decryptedData;
+      cout << "Data: " << output << "\n";
+      i++;
+    }
   }
   doneSending = true;
+  cout << "Data: \n" << output << '\n';
   cout << "size of receive: "<< receiveQueue.size() << "\n";
   sendThread.join();
   receiveThread.join();
