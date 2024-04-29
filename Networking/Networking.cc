@@ -4,6 +4,11 @@
 #include <algorithm>
 #include <iomanip>
 #include <cstring> 
+#include <thread>
+#include <mutex>
+#include <condition_variable>
+#include <queue>
+#include <atomic>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -105,4 +110,23 @@ string Networking::receive (int port) {
 
     close(sock_data);
     return string(buffer, received_bytes);
+}
+
+void sender(ThreadSafeQueue<string> &sendQueue, atomic<bool> &doneSending, int &port, string &IP) {
+    Networking net;
+    while (!doneSending) {
+        if (!sendQueue.empty()) {
+            string sendData = sendQueue.pop();
+            net.send(port, IP, sendData);
+        }
+    }
+}
+
+void receiver(ThreadSafeQueue<string> &receiveQueue, atomic<bool> &doneSending, int &port, Networking &net) {
+    while (!doneSending) {
+        string receivedData = net.receive(port);
+        if (!receivedData.empty()) {
+            receiveQueue.push(receivedData);
+        }
+    }
 }

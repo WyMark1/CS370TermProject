@@ -3,19 +3,23 @@
 #include <string>
 #include <algorithm>
 #include <iomanip>
+#include <chrono>
 #include <cstring> 
+#include <thread>
+#include <unistd.h>  
+#include <mutex>
+#include <atomic>
 #include <unistd.h>
 #include "Client.h"
 #include "../Networking/Networking.h"
 #include "../Encryption/Encryption.h"
 
-#define CLIENT_PORT 8081 // Client port
-#define CLIENT_SEND_PORT 8089
-#define RPI_IP_ADDRESS "127.0.0.0" // Replace with Raspberry Pi's IP
-#define BUFFER_SIZE 1024
 using namespace std;
 
 int run() {
+  int client_send_port = 8081;
+  int client_receive_port = 8089;
+  string RPI_ip_addr = "127.0.0.0"; //Replace with Raspberry Pi's IP
   string filename;
 
   cout << "Enter the name of the text file to send: ";
@@ -27,31 +31,43 @@ int run() {
     return -1;
   }
 
-  char* buffer = new char[BUFFER_SIZE];
+  ThreadSafeQueue<string> sendQueue;
+  ThreadSafeQueue<string> receiveQueue;
+  atomic<bool> doneSending(false);
+  Networking net;
+  thread sendThread(sender, ref(sendQueue), ref(doneSending), ref(client_send_port), ref(RPI_ip_addr));
+  thread receiveThread(receiver, ref(receiveQueue), ref(doneSending), ref(client_receive_port), ref(net));
+
+  string data;
   string key = "SUPER secret key";
   string output;
-  Networking net;
   while (!file.eof()) {
-    memset(buffer, 0, BUFFER_SIZE); //Delete what is in the buffer
-    int bytes_read = file.read(buffer, BUFFER_SIZE).gcount();
-    if (bytes_read < 0) {
+    getline(file, data);
+    if (!file) {
       perror("Error reading file");
-      delete[] buffer;
       return -1;
     }
-    string data = string(buffer, BUFFER_SIZE);
+
     string send;
+    cout << "sent " << data << "\n";
     Encrypt(data,send,key);
-    if (net.send(CLIENT_PORT,RPI_IP_ADDRESS, send) == -1) {
-      delete[] buffer;
-      return -1;
-    } else {
-      data = net.receive(CLIENT_SEND_PORT);
-      Decrypt(data,send,key);
-      output += send;
-    }
+    sendQueue.push(send);
   }
-  delete[] buffer;
+  sleep(3);
+  cout << "End of loop\n";
+  while (!receiveQueue.empty()) {
+    string receivedData = receiveQueue.pop();
+    string decryptedData;
+    Decrypt(receivedData, decryptedData, key);
+    output += decryptedData;
+    cout << receiveQueue.size();
+  }
+  doneSending = true;
+  cout << "size of receive: "<< receiveQueue.size() << "\n";
+  sendThread.join();
+  receiveThread.join();
+  cout << "size of receive: "<< receiveQueue.size() << "\n";
+
   cout << "Data: \n" << output << '\n';
 
   return 0;
