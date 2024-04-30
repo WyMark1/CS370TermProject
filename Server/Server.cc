@@ -14,6 +14,17 @@
 
 using namespace std;
 
+int parseBurstDuration(const string& data) {
+    int pos = data.find(' ');
+    if (pos == -1) {
+        cerr << "Error: Invalid data format. Expected burst time before data.\n";
+        return -1;
+    }
+
+    string burstStr = data.substr(0, pos);
+    return stoi(burstStr);
+ 
+}
 
 int run() {
     Networking net;
@@ -34,16 +45,38 @@ int run() {
             current = decrypt;
             cout << "Current: "<< current << "\n";
             //do work on current
-        /*} else if (size > 0 && !current.empty()) {
-            //check if the burst duration is less on the next item in the queue
-            // if so then push current onto the working stack if not then push the next queue value onto the stack
-            //do work on current*/
+        } else if (size > 0 && !current.empty()) {
+            // Parse burst durations
+            string nextItem = receiveQueue.pop();
+            int nextBurst = parseBurstDuration(nextItem);
+            int currentBurst = parseBurstDuration(current); 
+            current = current.substr(current.find(' ') + 1); // Remove burst time
+
+            // Task Scheduling 
+            if (nextBurst < currentBurst) {
+                working.push(current);
+                current = receiveQueue.pop();
+                cout << "Moved current to stack. New current: " << current << endl;
+
+                receiveQueue.push(nextItem);
+            }
+            
         } else if (!current.empty()) { // And the burst duration is done send to the PI
+            // Task Processing
+            cout << "Processing task: " << current << endl;
+            sleep(1); // Simulate processing time
+
             string send;
             cout << "sent " << current << "\n";
             Encrypt(current, send, key);
             if(net.send(SERVER_SEND_PORT, net.receive_ip, send) == -1) return -1;
             current = "";
+            // Resume from stack
+            if (!working.empty()) {
+                current = working.top();
+                working.pop();
+                cout << "Resumed task from stack: " << current << endl; 
+            }
         }
     }
     doneSending = true;
