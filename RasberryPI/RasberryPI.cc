@@ -3,41 +3,82 @@
 #include <string>
 #include <algorithm>
 #include <iomanip>
+#include <vector>
+#include <thread>
+#include <mutex>
+#include <unistd.h>  
+#include <atomic>
+#include <chrono>
 #include <cstring>
 #include "RasberryPI.h"
 #include "../Networking/Networking.h"
-
-
-#define CLIENT_PORT 8081  // Port for Client
-#define SERVER_PORT 8080  // Port for Server
-#define CLIENT_SEND_PORT 8089
-#define SERVER_SEND_PORT 8083
-#define SERVER_IP "127.0.0.0" //IP of server
-
 
 using namespace std;
 
 
 int run() {
+    int CLIENT_PORT = 8081; 
+    int SERVER_PORT = 8080;  
+    int CLIENT_SEND_PORT = 8089;
+    int SERVER_SEND_PORT = 8083;
+    string SERVER_IP = "127.0.0.0";
+
     string data;
     Networking net;
+    Networking net2;
+    ThreadSafeQueue<string> sendQueue;
+    ThreadSafeQueue<string> receiveQueue;
+    ThreadSafeQueue<string> receiveServerQueue;
+    atomic<bool> doneSending(false);
+    thread receiveThread(receiver, ref(receiveQueue), ref(doneSending), ref(CLIENT_PORT), ref(net));
+    thread sendThread(sender, ref(sendQueue), ref(doneSending), ref(SERVER_PORT), ref(SERVER_IP));
+    thread receiveServer(receiver, ref(receiveServerQueue), ref(doneSending), ref(SERVER_SEND_PORT), ref(net2));
 
-    data = net.receive(CLIENT_PORT);
-    string client_ip = net.receive_ip;
+    while (true) {
 
-    // Calculate burst time (can change)
-    int burstTime = data.size() * 0.1;
+        if (receiveServerQueue.size() > 0 ) {
+            string sent = receiveServerQueue.pop();
+            cout << "Sending to client "<< sent << "\n";
+            this_thread::sleep_for(chrono::milliseconds(1));
+            if (net.send(CLIENT_SEND_PORT, net.receive_ip, sent) == -1) return -1;
+        }
+        int size = receiveQueue.size();
+        if (size > 0) {
+            cout << "Size: " << size << "\n";
+            vector<string> unsorted;
+            for (int i = 0; i < size; i++) {
+                unsorted.push_back(receiveQueue.pop());
+            }
+            //sort
+            vector<string> sorted = unsorted; // place holder
+            for (const auto &item : unsorted) {
+                this_thread::sleep_for(chrono::milliseconds(1));
+                sendQueue.push(item);
+            }
+        }
+        
+    } 
+
+    cout << "finished";
+    doneSending = true;
+    sendThread.join();
+    receiveThread.join();
+    receiveServer.join();
+    /*
+    // Calculate burst time as timestamp string
+    time_t burstTimeRaw = time(nullptr);
+    struct tm* burstTimeInfo = localtime(&burstTimeRaw);
+    char timestampStr[80];
+    strftime(timestampStr, 80, "%Y-%m-%d %H:%M:%S", burstTimeInfo);
 
     // Prepend the burst time to the data
-    data = std::to_string(burstTime) + " " + data;
+    data = string(timestampStr) + " " + data;
+    */ //add this to the new while loop
+    // Calculate burst time (can change)
+    //int burstTime = data.size() * 0.1;
 
-    // Forward to server
-    if(net.send(SERVER_PORT,SERVER_IP, data) == -1) return -1;
+    // Prepend the burst time to the data
+    //data = std::to_string(burstTime) + " " + data;
 
-    // Receive from server 
-    data = net.receive(SERVER_SEND_PORT);
-
-    // Send to client
-    if(net.send(CLIENT_SEND_PORT, client_ip, data) == -1) return -1;
     return 0; 
 } 

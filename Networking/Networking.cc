@@ -4,6 +4,11 @@
 #include <algorithm>
 #include <iomanip>
 #include <cstring> 
+#include <thread>
+#include <mutex>
+#include <condition_variable>
+#include <queue>
+#include <atomic>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -49,7 +54,7 @@ int Networking::send(int port, string send_ip, string data) {
     return 1;
 }
 
-string Networking::receive (int port) {
+string Networking::receive (int port, int timeout_ms) {
     struct sockaddr_in addr;
     addr.sin_family = AF_INET;
     addr.sin_addr.s_addr = INADDR_ANY;
@@ -77,7 +82,30 @@ string Networking::receive (int port) {
       exit(EXIT_FAILURE);
     }
 
-    printf("Listening connections on port %d...\n", port);
+    //printf("Listening connections on port %d...\n", port);
+
+    fd_set read_fds;
+    FD_ZERO(&read_fds);
+    FD_SET(sock, &read_fds);
+
+    struct timeval timeout;
+    timeout.tv_sec = timeout_ms / 1000; // Convert milliseconds to seconds
+    timeout.tv_usec = (timeout_ms % 1000) * 1000; // Remainder in microseconds
+
+    // Wait for incoming connections with a timeout
+    int ready = select(sock + 1, &read_fds, nullptr, nullptr, &timeout);
+
+    if (ready == 0) {
+        // Timeout occurred
+        close(sock);
+        return "";
+    }
+
+    if (ready < 0) {
+        perror("Select failed");
+        close(sock);
+        exit(EXIT_FAILURE);
+    }
 
     int len = sizeof(addr);
     int sock_data = accept(sock, reinterpret_cast<struct sockaddr *>(&addr), reinterpret_cast<socklen_t *>(&len));
@@ -105,4 +133,24 @@ string Networking::receive (int port) {
 
     close(sock_data);
     return string(buffer, received_bytes);
+}
+
+void sender(ThreadSafeQueue<string> &sendQueue, atomic<bool> &doneSending, int &port, string &IP) {
+    Networking net;
+    while (!doneSending) {
+        if (!sendQueue.empty()) {
+            string sendData = sendQueue.pop();
+            net.send(port, IP, sendData);
+        }
+    }
+}
+
+void receiver(ThreadSafeQueue<string> &receiveQueue, atomic<bool> &doneSending, int &port, Networking &net) {
+    while (!doneSending) {
+        string receivedData = net.receive(port, 100);
+        if (doneSending) break;
+        if (!receivedData.empty()) {
+            receiveQueue.push(receivedData);
+        }
+    }
 }
