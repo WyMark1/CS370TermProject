@@ -15,6 +15,15 @@
 
 using namespace std;
 
+// Burst time calculation function
+int calculate_burst_time(const string& data) {
+    const double BYTES_PER_MS = 1000.0;
+    int baseBurstTime = data.size() / BYTES_PER_MS;
+    int networkVariability = rand() % 10 + 1;
+    baseBurstTime += networkVariability;
+
+    return baseBurstTime;
+}
 
 int run() {
     int CLIENT_PORT = 8081; 
@@ -49,6 +58,13 @@ int run() {
             for (int i = 0; i < size; i++) {
                 unsorted.push_back(receiveQueue.pop());
             }
+
+            // calculate burst time and add to line
+            for (string& line : unsorted) {
+                int burstTime = calculate_burst_time(line); 
+                data = std::to_string(burstTime) + " " + line;
+            }
+
             //sort
             vector<string> sorted = unsorted; // place holder
             for (const auto &item : unsorted) {
@@ -64,21 +80,6 @@ int run() {
     sendThread.join();
     receiveThread.join();
     receiveServer.join();
-    /*
-    // Calculate burst time as timestamp string
-    time_t burstTimeRaw = time(nullptr);
-    struct tm* burstTimeInfo = localtime(&burstTimeRaw);
-    char timestampStr[80];
-    strftime(timestampStr, 80, "%Y-%m-%d %H:%M:%S", burstTimeInfo);
-
-    // Prepend the burst time to the data
-    data = string(timestampStr) + " " + data;
-    */ //add this to the new while loop
-    // Calculate burst time (can change)
-    //int burstTime = data.size() * 0.1;
-
-    // Prepend the burst time to the data
-    //data = std::to_string(burstTime) + " " + data;
 
     return 0; 
 } 
