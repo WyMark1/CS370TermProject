@@ -21,7 +21,7 @@ int run() {
     int SERVER_PORT = 8080;  
     int CLIENT_SEND_PORT = 8089;
     int SERVER_SEND_PORT = 8083;
-    string SERVER_IP = "129.82.44.248";
+    string SERVER_IP = "127.0.0.0";
 
     string data;
     Networking net;
@@ -34,18 +34,15 @@ int run() {
     thread sendThread(sender, ref(sendQueue), ref(doneSending), ref(SERVER_PORT), ref(SERVER_IP));
     thread receiveServer(receiver, ref(receiveServerQueue), ref(doneSending), ref(SERVER_SEND_PORT), ref(net2));
 
-    //bool hasSent = false;
     while (true) {
 
         if (receiveServerQueue.size() > 0 ) {
             string sent = receiveServerQueue.pop();
             cout << "Sending to client "<< sent << "\n";
+            this_thread::sleep_for(chrono::milliseconds(1));
             if (net.send(CLIENT_SEND_PORT, net.receive_ip, sent) == -1) return -1;
-            //hasSent = true;
         }
-        sleep(1); // Wait for some things to come in
         int size = receiveQueue.size();
-        //if (size == 0 && hasSent) break;
         if (size > 0) {
             cout << "Size: " << size << "\n";
             vector<string> unsorted;
@@ -55,6 +52,7 @@ int run() {
             //sort
             vector<string> sorted = unsorted; // place holder
             for (const auto &item : unsorted) {
+                this_thread::sleep_for(chrono::milliseconds(1));
                 sendQueue.push(item);
             }
         }

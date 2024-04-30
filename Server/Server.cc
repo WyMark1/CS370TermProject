@@ -25,9 +25,7 @@ int run() {
     thread receiveThread(receiver, ref(receiveQueue), ref(doneSending), ref(SERVER_PORT), ref(net));
     string current;
     stack<string> working;
-    //bool sent = false;
     while (true) {
-        sleep(1);
         int size = receiveQueue.size();
         if (size > 0 && current.empty()) {
             string decrypt;
@@ -46,7 +44,6 @@ int run() {
             Encrypt(current, send, key);
             if(net.send(SERVER_SEND_PORT, net.receive_ip, send) == -1) return -1;
             current = "";
-            //sent = true;
         }
     }
     doneSending = true;

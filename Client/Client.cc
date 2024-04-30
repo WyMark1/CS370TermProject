@@ -19,7 +19,7 @@ using namespace std;
 int run() {
   int client_send_port = 8081;
   int client_receive_port = 8089;
-  string RPI_ip_addr = "129.82.44.106"; //Replace with Raspberry Pi's IP
+  string RPI_ip_addr = "129.82.45.123"; //Replace with Raspberry Pi's IP
   string filename;
 
   cout << "Enter the name of the text file to send: ";
@@ -48,16 +48,15 @@ int run() {
       perror("Error reading file");
       return -1;
     }
-
+    this_thread::sleep_for(chrono::milliseconds(1));
     string send;
     cout << "sent " << data << "\n";
     Encrypt(data,send,key);
     sendQueue.push(send);
     expected++;
   }
-  cout << expected << "\n";
-  sleep(3);
-  cout << "End of loop\n";
+
+
   int i=0;
   while (i != expected) {
     if (!receiveQueue.empty()) {
@@ -70,13 +69,9 @@ int run() {
     }
   }
   doneSending = true;
-  cout << "Data: \n" << output << '\n';
-  cout << "size of receive: "<< receiveQueue.size() << "\n";
+  cout << "Final Data: \n" << output << '\n';
+
   sendThread.join();
   receiveThread.join();
-  cout << "size of receive: "<< receiveQueue.size() << "\n";
-
-  cout << "Data: \n" << output << '\n';
-
   return 0;
 }

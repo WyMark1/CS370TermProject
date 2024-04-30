@@ -48,7 +48,7 @@ class Networking {
     public:
         std::string receive_ip;
         int send(int port, std::string ip, std::string data);
-        std::string receive(int port);
+        std::string receive(int port, int time_out);
 };
 
 void sender(ThreadSafeQueue<std::string> &sendQueue, std::atomic<bool> &doneSending, int &port, std::string &IP);
