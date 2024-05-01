@@ -19,7 +19,7 @@ using namespace std;
 int run() {
   int client_send_port = 8081;
   int client_receive_port = 8089;
-  string RPI_ip_addr = "129.82.44.169"; //Replace with Raspberry Pi's IP
+  string RPI_ip_addr = "127.0.0.0"; //Replace with Raspberry Pi's IP
   string filename;
 
   cout << "Enter the name of the text file to send: ";
@@ -56,25 +56,32 @@ int run() {
     //add bursttime to data
     string burstTime = to_string(data.size());
     send = burstTime + "BurstTImePI" + send;
-
     sendQueue.push(send);
     expected++;
   }
 
 
   int i=0;
+  int timeWaited = 0;
   while (i != expected) {
+    this_thread::sleep_for(chrono::milliseconds(30));
     if (!receiveQueue.empty()) {
       string receivedData = receiveQueue.pop();
       string decryptedData;
       Decrypt(receivedData, decryptedData, key);
       output += "\n" + decryptedData;
-      cout << "Data: " << output << "\n";
       i++;
+      timeWaited = 0;
+    } else if (timeWaited > 30) {
+      break;
+    } else {
+      timeWaited++;
     }
   }
+
   doneSending = true;
   cout << "Final Data: \n" << output << '\n';
+  cout << expected - i << " Packets lost\n";
 
   sendThread.join();
   receiveThread.join();

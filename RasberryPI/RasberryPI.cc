@@ -34,7 +34,7 @@ int run() {
     thread receiveServer(receiver, ref(receiveServerQueue), ref(doneSending), ref(SERVER_SEND_PORT), ref(net2));
 
     while (true) {
-
+        this_thread::sleep_for(chrono::milliseconds(3));
         if (receiveServerQueue.size() > 0 ) {
             string sent = receiveServerQueue.pop();
             cout << "Sending to client "<< sent << "\n";
@@ -49,11 +49,10 @@ int run() {
                 unsorted.push_back(receiveQueue.pop());
             }
 
-            //sort
             sort(unsorted.begin(), unsorted.end(), 
                  [](const string& a, const string& b) {
-                     size_t delimPosA = a.find("burstTimePI");
-                     size_t delimPosB = b.find("burstTimePI");
+                     size_t delimPosA = a.find("BurstTImePI");
+                     size_t delimPosB = b.find("BurstTImePI");
                      string burstTimeStrA = a.substr(0, delimPosA); 
                      string burstTimeStrB = b.substr(0, delimPosB); 
                      int burstTimeA = stoi(burstTimeStrA);
@@ -61,7 +60,6 @@ int run() {
                      return burstTimeA < burstTimeB;
             });
 
-            vector<string> sorted = unsorted; // place holder
             for (const auto &item : unsorted) {
                 this_thread::sleep_for(chrono::milliseconds(1));
                 sendQueue.push(item);

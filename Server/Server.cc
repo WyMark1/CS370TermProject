@@ -14,16 +14,18 @@
 
 using namespace std;
 
-int parseBurstDuration(const string& data) {
-    int pos = data.find(' ');
-    if (pos == -1) {
-        cerr << "Error: Invalid data format. Expected burst time before data.\n";
-        return -1;
-    }
+size_t getBurstTime(string data) {
+    size_t loc = data.find("BurstTImePI");
+    size_t start = loc + string("BurstTImePI").length();
+    string burstTimeStr = data.substr(0, start);
+    size_t burstTime = stoi(burstTimeStr);
+    return burstTime;
+}
 
-    string burstStr = data.substr(0, pos);
-    return stoi(burstStr);
- 
+string removeBurst(string str) {
+    size_t loc = str.find("BurstTImePI");
+    str.erase(0, loc+string("BurstTImePI").length());
+    return str;
 }
 
 int run() {
@@ -35,50 +37,94 @@ int run() {
     atomic<bool> doneSending(false);
     thread receiveThread(receiver, ref(receiveQueue), ref(doneSending), ref(SERVER_PORT), ref(net));
     string current;
-    stack<string> working;
+    int currVal = 0;
+    queue<string> working;
+    queue<int> workingVals;
     while (true) {
+        this_thread::sleep_for(chrono::milliseconds(3));
         int size = receiveQueue.size();
-        if (size > 0 && current.empty()) {
-            string decrypt;
-            string encrypted = receiveQueue.pop();
-            Decrypt(encrypted, decrypt, key);
-            current = decrypt;
-            cout << "Current: "<< current << "\n";
-            //do work on current
-        } else if (size > 0 && !current.empty()) {
-            // Parse burst durations
-            string nextItem = receiveQueue.pop();
-            int nextBurst = parseBurstDuration(nextItem);
-            int currentBurst = parseBurstDuration(current); 
-            current = current.substr(current.find(' ') + 1); // Remove burst time
-
-            // Task Scheduling 
-            if (nextBurst < currentBurst) {
-                working.push(current);
-                current = receiveQueue.pop();
-                cout << "Moved current to stack. New current: " << current << endl;
-
-                receiveQueue.push(nextItem);
-            }
-            
-        } else if (!current.empty()) { // And the burst duration is done send to the PI
-            // Task Processing
-            cout << "Processing task: " << current << endl;
-            sleep(1); // Simulate processing time
-
+        if (current.empty() && currVal > 0) {
             string send;
-            cout << "sent " << current << "\n";
-            Encrypt(current, send, key);
+            string val = to_string(currVal);
+            cout << "sent " << currVal << "\n";
+            Encrypt(val, send, key);
+            this_thread::sleep_for(chrono::milliseconds(1));
             if(net.send(SERVER_SEND_PORT, net.receive_ip, send) == -1) return -1;
             current = "";
-            // Resume from stack
+            currVal = 0;
+        } else if (size > 0 && current.empty()) {
+            string encrypted;
             if (!working.empty()) {
-                current = working.top();
-                working.pop();
-                cout << "Resumed task from stack: " << current << endl; 
+                if (working.front().length() <  getBurstTime(receiveQueue.front())) {
+                    current = working.front();
+                    currVal = workingVals.front();
+                    working.pop();
+                    workingVals.pop();
+                }
+            } 
+
+            if (current.empty()) {
+                encrypted = receiveQueue.pop();
+                encrypted = removeBurst(encrypted);
+                currVal = 0;
+                string decrypt;
+                Decrypt(encrypted, decrypt, key);
+                current = decrypt;
             }
+            cout << "Current: "<< current << "\n";
+            currVal += current[0];
+            current.erase(0, 1);
+        } else if (size > 0 && !current.empty()) {
+            if (!working.empty()) {
+                if (working.front().length() <  getBurstTime(receiveQueue.front())) {
+                    if (current.length() > working.front().length()) {
+                        working.push(current);
+                        workingVals.push(currVal);
+                        current = working.front();
+                        currVal = workingVals.front();
+                        working.pop();
+                        workingVals.pop();
+                    }
+                } 
+            } 
+            if (current.length() > getBurstTime(receiveQueue.front())) {
+                working.push(current);
+                workingVals.push(currVal);
+                current = receiveQueue.pop();
+                current = removeBurst(current);
+                currVal = 0;
+                string decrypt;
+                Decrypt(current, decrypt, key);
+                current = decrypt;
+            }
+            cout << "Current: "<< current << "\n";
+            currVal += current[0];
+            current.erase(0, 1);
+        } else if (!current.empty()) {
+            if (!working.empty()) {
+                if (current.length() > working.front().length()) {
+                    working.push(current);
+                    workingVals.push(currVal);
+                    current = working.front();
+                    currVal = workingVals.front();
+                    working.pop();
+                    workingVals.pop();
+                }
+            }
+            cout << "Current: "<< current << "\n";
+            currVal += current[0];
+            current.erase(0, 1);
+        } else if (current.empty() && !working.empty()) {
+            current = working.front();
+            currVal = workingVals.front();
+            working.pop();
+            workingVals.pop();
+            cout << "Current: "<< current << "\n";
+            currVal += current[0];
+            current.erase(0, 1);
         }
     }
+
     doneSending = true;
     cout << "finished";
     receiveThread.join();
