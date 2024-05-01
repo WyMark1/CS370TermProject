@@ -15,16 +15,6 @@
 
 using namespace std;
 
-// Burst time calculation function
-int calculate_burst_time(const string& data) {
-    const double BYTES_PER_MS = 1000.0;
-    int baseBurstTime = data.size() / BYTES_PER_MS;
-    int networkVariability = rand() % 10 + 1;
-    baseBurstTime += networkVariability;
-
-    return baseBurstTime;
-}
-
 int run() {
     int CLIENT_PORT = 8081; 
     int SERVER_PORT = 8080;  
@@ -44,7 +34,7 @@ int run() {
     thread receiveServer(receiver, ref(receiveServerQueue), ref(doneSending), ref(SERVER_SEND_PORT), ref(net2));
 
     while (true) {
-
+        this_thread::sleep_for(chrono::milliseconds(3));
         if (receiveServerQueue.size() > 0 ) {
             string sent = receiveServerQueue.pop();
             cout << "Sending to client "<< sent << "\n";
@@ -59,14 +49,17 @@ int run() {
                 unsorted.push_back(receiveQueue.pop());
             }
 
-            // calculate burst time and add to line
-            for (string& line : unsorted) {
-                int burstTime = calculate_burst_time(line); 
-                data = std::to_string(burstTime) + " " + line;
-            }
+            sort(unsorted.begin(), unsorted.end(), 
+                 [](const string& a, const string& b) {
+                     size_t delimPosA = a.find("BurstTImePI");
+                     size_t delimPosB = b.find("BurstTImePI");
+                     string burstTimeStrA = a.substr(0, delimPosA); 
+                     string burstTimeStrB = b.substr(0, delimPosB); 
+                     int burstTimeA = stoi(burstTimeStrA);
+                     int burstTimeB = stoi(burstTimeStrB);
+                     return burstTimeA < burstTimeB;
+            });
 
-            //sort
-            vector<string> sorted = unsorted; // place holder
             for (const auto &item : unsorted) {
                 this_thread::sleep_for(chrono::milliseconds(1));
                 sendQueue.push(item);

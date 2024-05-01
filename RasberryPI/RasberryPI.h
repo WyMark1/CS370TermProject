@@ -5,7 +5,6 @@
 
 #include <string>
 
-int calculate_burst_time(const std::string& data); 
 int run();
 
 #endif

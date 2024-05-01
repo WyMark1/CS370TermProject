@@ -3,6 +3,7 @@
 
 #include <string>
 
+int parseBurstDuration(const std::string& data);
 int run();
 
 #endif
