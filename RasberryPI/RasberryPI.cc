@@ -15,13 +15,24 @@
 
 using namespace std;
 
+int getBurstTime(string &data) {
+    size_t loc = data.find("Burst Time: ");
+    size_t start = loc + string("Burst Time: ").length();
+    string burstTimeStr = data.substr(start);
+    int burstTime = stoi(burstTimeStr);
+    return burstTime;
+}
+
+bool compareBurst(string &a, string &b) {
+    return getBurstTime(a) < getBurstTime(b);
+}
 
 int run() {
     int CLIENT_PORT = 8081; 
     int SERVER_PORT = 8080;  
     int CLIENT_SEND_PORT = 8089;
     int SERVER_SEND_PORT = 8083;
-    string SERVER_IP = "127.0.0.0";
+    string SERVER_IP = "129.82.44.106";
 
     string data;
     Networking net;
@@ -35,11 +46,11 @@ int run() {
     thread receiveServer(receiver, ref(receiveServerQueue), ref(doneSending), ref(SERVER_SEND_PORT), ref(net2));
 
     while (true) {
-
+        this_thread::sleep_for(chrono::milliseconds(30));
         if (receiveServerQueue.size() > 0 ) {
             string sent = receiveServerQueue.pop();
             cout << "Sending to client "<< sent << "\n";
-            this_thread::sleep_for(chrono::milliseconds(1));
+            this_thread::sleep_for(chrono::milliseconds(15));
             if (net.send(CLIENT_SEND_PORT, net.receive_ip, sent) == -1) return -1;
         }
         int size = receiveQueue.size();
@@ -49,10 +60,9 @@ int run() {
             for (int i = 0; i < size; i++) {
                 unsorted.push_back(receiveQueue.pop());
             }
-            //sort
-            vector<string> sorted = unsorted; // place holder
+            sort(unsorted.begin(),unsorted.end(), compareBurst);
             for (const auto &item : unsorted) {
-                this_thread::sleep_for(chrono::milliseconds(1));
+                this_thread::sleep_for(chrono::milliseconds(15));
                 sendQueue.push(item);
             }
         }
@@ -64,21 +74,6 @@ int run() {
     sendThread.join();
     receiveThread.join();
     receiveServer.join();
-    /*
-    // Calculate burst time as timestamp string
-    time_t burstTimeRaw = time(nullptr);
-    struct tm* burstTimeInfo = localtime(&burstTimeRaw);
-    char timestampStr[80];
-    strftime(timestampStr, 80, "%Y-%m-%d %H:%M:%S", burstTimeInfo);
-
-    // Prepend the burst time to the data
-    data = string(timestampStr) + " " + data;
-    */ //add this to the new while loop
-    // Calculate burst time (can change)
-    //int burstTime = data.size() * 0.1;
-
-    // Prepend the burst time to the data
-    //data = std::to_string(burstTime) + " " + data;
 
     return 0; 
 } 

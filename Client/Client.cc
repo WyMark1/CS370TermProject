@@ -48,10 +48,12 @@ int run() {
       perror("Error reading file");
       return -1;
     }
-    this_thread::sleep_for(chrono::milliseconds(1));
+    this_thread::sleep_for(chrono::milliseconds(15));
     string send;
-    cout << "sent " << data << "\n";
+    int burstTime = data.length();
     Encrypt(data,send,key);
+    send.append("Burst Time: "+ to_string(burstTime));
+    cout << "sent " << send << "\n";
     sendQueue.push(send);
     expected++;
   }
