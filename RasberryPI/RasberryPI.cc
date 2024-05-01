@@ -15,6 +15,7 @@
 
 using namespace std;
 
+
 int getBurstTime(string &data) {
     size_t loc = data.find("Burst Time: ");
     size_t start = loc + string("Burst Time: ").length();
@@ -61,6 +62,7 @@ int run() {
                 unsorted.push_back(receiveQueue.pop());
             }
             sort(unsorted.begin(),unsorted.end(), compareBurst);
+
             for (const auto &item : unsorted) {
                 this_thread::sleep_for(chrono::milliseconds(15));
                 sendQueue.push(item);
